@@ -1,8 +1,10 @@
 package home;
 
 import base.BasePage;
+import base.Language;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class HomePage extends BasePage {
@@ -43,5 +45,30 @@ public class HomePage extends BasePage {
 
     public int getMobileNavLinkCount() {
         return countElements(mobileNavLinks);
+    }
+
+    private By languageButton(Language lang) {
+        return By.xpath("//span[@role='link' and text()='" + lang.getCode() + "']");
+    }
+
+    private By activeLanguageButton() {
+        return By.cssSelector("span[role='link'].Header_activeLangBg__6TcI7");
+    }
+
+    public void switchLanguage(Language lang) {
+        By targetActiveButton = By.xpath(
+                "//span[@role='link' and text()='" + lang.getCode() + "' and contains(@class, 'Header_activeLangBg')]"
+        );
+
+        wait.until(ExpectedConditions.elementToBeClickable(languageButton(lang))).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(targetActiveButton));
+    }
+
+    public String getActiveLanguageCode() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(activeLanguageButton())).getText();
+    }
+
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
     }
 }
