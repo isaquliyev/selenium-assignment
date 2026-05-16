@@ -1,5 +1,6 @@
 package home;
 
+import base.Device;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -13,11 +14,10 @@ public class HomePageTest {
 
     private WebDriver driver;
     private HomePage homePage;
+
     @BeforeEach
     public void setUp() throws Exception {
-        ChromeOptions options = new ChromeOptions();
-
-        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), options);
+        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), new ChromeOptions());
         homePage = new HomePage(driver);
     }
 
@@ -29,7 +29,7 @@ public class HomePageTest {
 
     @Test
     public void testDesktopNav() {
-        homePage.setWindowSize(1280, 800);
+        homePage.setDevice(Device.DESKTOP);
         homePage.open();
 
         assertFalse(homePage.isBurgerButtonVisible(), "Burger should be hidden on desktop");
@@ -39,11 +39,30 @@ public class HomePageTest {
 
     @Test
     public void testMobileNav() {
-        homePage.setWindowSize(768, 800);
+        homePage.setDevice(Device.MOBILE);
         homePage.open();
 
         assertTrue(homePage.isBurgerButtonVisible(), "Burger should be visible on mobile");
         assertFalse(homePage.isDesktopNavVisible(), "Desktop nav should be hidden on mobile");
+
+        homePage.openMobileMenu();
+        assertEquals(6, homePage.getMobileNavLinkCount(), "Should have 6 nav links");
+    }
+
+    @Test
+    public void testNavLinkCountConsistentAcrossDevices() {
+        homePage.setDevice(Device.DESKTOP);
+        homePage.open();
+        int desktopCount = homePage.getDesktopNavLinkCount();
+
+        homePage.setDevice(Device.MOBILE);
+        homePage.open();
+        homePage.openMobileMenu();
+        int mobileCount = homePage.getMobileNavLinkCount();
+
+        assertEquals(desktopCount, mobileCount,
+                "Nav link count should be the same on desktop (%d) and mobile (%d)"
+                        .formatted(desktopCount, mobileCount));
     }
 
     @AfterEach
