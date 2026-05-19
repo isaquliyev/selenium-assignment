@@ -1,24 +1,32 @@
 package base;
 
+import download.DownloadDirectory;
 import navigation.NavigationBar;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
 
-import java.net.URL;
+import java.nio.file.Path;
 
 public abstract class BasePageTest {
 
     protected WebDriver driver;
     protected NavigationBar navBar;
+    private static Path downloadDirectory;
 
     @BeforeEach
     public void setUp() throws Exception {
-        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), new ChromeOptions());
+        downloadDirectory = DownloadDirectory.defaultPath();
+        DownloadDirectory.ensureExists(downloadDirectory);
+        DownloadDirectory.clear(downloadDirectory);
+
+        driver = WebDriverFactory.createRemoteChrome(downloadDirectory);
         navBar = new NavigationBar(driver);
         navigateToPage();
+    }
+
+    public static Path getDownloadDirectory() {
+        return downloadDirectory;
     }
 
     protected abstract void navigateToPage();

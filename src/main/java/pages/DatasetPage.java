@@ -1,16 +1,16 @@
 package pages;
 
 import base.BasePage;
+import download.DownloadDirectory;
+import download.ResourceDownloader;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DatasetPage extends BasePage {
 
@@ -39,8 +39,11 @@ public class DatasetPage extends BasePage {
     private final By downloadButton = By.xpath("//div[@role='tabpanel']//a[contains(@href,'download')]");
     private final By previewButton  = By.xpath("//button[contains(.,'Preview')]");
 
+    private final ResourceDownloader downloader;
+
     public DatasetPage(WebDriver driver) {
         super(driver);
+        this.downloader = new ResourceDownloader(driver);
     }
 
     public void waitForPageLoad() {
@@ -100,57 +103,15 @@ public class DatasetPage extends BasePage {
         return isElementVisible(previewButton);
     }
 
-    private HttpURLConnection openDownloadConnection(String downloadUrl, String method) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(downloadUrl).openConnection();
-        conn.setRequestMethod(method);
-        conn.setRequestProperty("User-Agent",
-                (String) ((JavascriptExecutor) driver).executeScript("return navigator.userAgent;"));
-        conn.setRequestProperty("Referer", driver.getCurrentUrl());
-        String cookieHeader = driver.manage().getCookies().stream()
-                .map(c -> c.getName() + "=" + c.getValue())
-                .collect(Collectors.joining("; "));
-        if (!cookieHeader.isEmpty()) {
-            conn.setRequestProperty("Cookie", cookieHeader);
-        }
-        conn.setInstanceFollowRedirects(true);
-        conn.connect();
-        return conn;
+    public void clickDownload() {
+        wait.until(ExpectedConditions.elementToBeClickable(downloadButton)).click();
     }
 
-    private HttpURLConnection connectForDownload(String downloadUrl) throws Exception {
-        HttpURLConnection conn = openDownloadConnection(downloadUrl, "HEAD");
-        int code = conn.getResponseCode();
-        if (code == 403 || code == 405) {
-            conn.disconnect();
-            conn = openDownloadConnection(downloadUrl, "GET");
-        }
-        return conn;
+    public Path waitForDownloadedFile(Path directory, String extension, Duration timeout) {
+        return DownloadDirectory.waitForFile(directory, extension, timeout);
     }
 
-    public int getDownloadUrlResponseCode(String downloadUrl) throws Exception {
-        HttpURLConnection conn = connectForDownload(downloadUrl);
-        try {
-            return conn.getResponseCode();
-        } finally {
-            conn.disconnect();
-        }
-    }
-
-    public String getDownloadUrlExtension(String downloadUrl) {
-        String path = downloadUrl.split("\\?")[0]; // strip query params
-        return path.substring(path.lastIndexOf('.') + 1).toLowerCase();
-    }
-
-    public String getContentDispositionFilename(String downloadUrl) throws Exception {
-        HttpURLConnection conn = connectForDownload(downloadUrl);
-        try {
-            String disposition = conn.getHeaderField("Content-Disposition");
-            if (disposition != null && disposition.contains("filename=")) {
-                return disposition.split("filename=")[1].replaceAll("\"", "").trim();
-            }
-            return "";
-        } finally {
-            conn.disconnect();
-        }
+    public Path downloadResourceTo(Path directory, String expectedExtension) throws Exception {
+        return downloader.downloadTo(directory, getDownloadUrl(), expectedExtension.toLowerCase());
     }
 }
