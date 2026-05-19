@@ -7,6 +7,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SearchPage extends BasePage {
 
@@ -47,6 +48,26 @@ public class SearchPage extends BasePage {
     // Active filters & clear
     private final By activeFilterTags  = By.cssSelector("div.flex.flex-wrap p");
     private final By clearFiltersBtn   = By.xpath("//button[contains(text(),'Clear Filters')]");
+
+    // Sort dropdown
+    private final By sortLabel = By.xpath(
+            "//h2[contains(.,'Sort by') or contains(.,'Sıralayın')]"
+    );
+    private final By sortTrigger = By.xpath(
+            "./following-sibling::div[contains(@class,'cursor-pointer') and contains(@class,'shadow-lg')]"
+    );
+    private final By sortTriggerFallback = By.xpath(
+            "./parent::div/div[contains(@class,'cursor-pointer') and contains(@class,'shadow-lg')]"
+    );
+    private final By sortDropdownRoot = By.xpath(
+            "./ancestor::div[contains(@class,'relative')][1]"
+    );
+    private final By sortOptionsPanel = By.xpath(
+            ".//div[contains(@class,'absolute') and contains(@class,'top-full')]"
+    );
+    private final By sortOptionRows = By.xpath(
+            ".//div[contains(@class,'absolute')]//div[contains(@class,'px-4') and contains(@class,'cursor-pointer')]"
+    );
 
     public SearchPage(WebDriver driver) {
         super(driver);
@@ -152,6 +173,73 @@ public class SearchPage extends BasePage {
         ));
     }
 
+    // --- Sort dropdown ---
+
+    public void scrollToSortDropdown() {
+        WebElement label = wait.until(ExpectedConditions.presenceOfElementLocated(sortLabel));
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block: 'center'});", label);
+    }
+
+    private WebElement getSortLabel() {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(sortLabel));
+    }
+
+    private WebElement getSortTrigger() {
+        scrollToSortDropdown();
+        WebElement label = getSortLabel();
+        List<WebElement> triggers = label.findElements(sortTrigger);
+        if (triggers.isEmpty()) {
+            triggers = label.findElements(sortTriggerFallback);
+        }
+        if (triggers.isEmpty()) {
+            triggers = driver.findElements(By.xpath(
+                    "//h2[contains(.,'Sort by') or contains(.,'Sıralayın')]"
+                            + "/following-sibling::div[contains(@class,'cursor-pointer') and contains(@class,'shadow-lg')]"
+            ));
+        }
+        return wait.until(ExpectedConditions.elementToBeClickable(triggers.get(0)));
+    }
+
+    private WebElement getSortDropdownRoot() {
+        return getSortLabel().findElement(sortDropdownRoot);
+    }
+
+    public boolean isSortDropdownVisible() {
+        return isElementVisible(sortLabel) && !getSortLabel().findElements(sortTrigger).isEmpty();
+    }
+
+    public void openSortDropdown() {
+        scrollToSortDropdown();
+        getSortTrigger().click();
+        wait.until(ExpectedConditions.visibilityOfNestedElementsLocatedBy(
+                getSortDropdownRoot(), sortOptionsPanel));
+    }
+
+    public String getSelectedSortOption() {
+        scrollToSortDropdown();
+        return getSortTrigger().findElement(By.tagName("h2")).getText().trim();
+    }
+
+    public void selectSortOption(String optionText) {
+        scrollToSortDropdown();
+        WebElement root = getSortDropdownRoot();
+        getSortTrigger().click();
+        By option = By.xpath(
+                ".//div[contains(@class,'absolute')]//div[contains(@class,'px-4') and contains(@class,'cursor-pointer')]"
+                        + "[contains(normalize-space(),'" + optionText + "')]"
+        );
+        wait.until(ExpectedConditions.elementToBeClickable(root.findElement(option))).click();
+        wait.until(driver -> optionText.equals(getSelectedSortOption()));
+    }
+
+    public List<String> getSortOptionLabels() {
+        openSortDropdown();
+        return getSortDropdownRoot().findElements(sortOptionRows).stream()
+                .map(el -> el.getText().trim())
+                .collect(Collectors.toList());
+    }
+
     public String getCurrentUrl() {
         return driver.getCurrentUrl();
     }
@@ -159,5 +247,13 @@ public class SearchPage extends BasePage {
     public void waitForPageLoad() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(searchInput));
         wait.until(ExpectedConditions.visibilityOfElementLocated(categorySection));
+    }
+
+    public void clickFirstResult() {
+        By firstResult = By.xpath("//a[.//article]");
+        WebElement link = wait.until(ExpectedConditions.elementToBeClickable(firstResult));
+        String href = link.getAttribute("href");
+        ((JavascriptExecutor) driver).executeScript("window.location.href = arguments[0];", href);
+        wait.until(ExpectedConditions.urlContains("/@"));
     }
 }

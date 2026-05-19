@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class SearchPageTest extends BasePageTest {
 
     private SearchPage searchPage;
@@ -22,6 +23,7 @@ public class SearchPageTest extends BasePageTest {
         navBar.clickDesktopNavItem(NavItem.SEARCH);
         searchPage = new SearchPage(driver);
         searchPage.waitForPageLoad();
+        searchPage.scrollToSortDropdown();
     }
 
     @Test
@@ -167,5 +169,27 @@ public class SearchPageTest extends BasePageTest {
 
         assertFalse(searchPage.getCurrentUrl().contains("category=%5B%22"),
                 "URL should not contain active category filter after clearing");
+    }
+
+    @Test
+    public void testSortDropdownDefaultSelected() {
+        assertEquals("Default", searchPage.getSelectedSortOption());
+    }
+
+    @Test
+    public void testSortDropdownVisible() {
+        assertTrue(searchPage.isSortDropdownVisible(), "Sort dropdown should be visible");
+    }
+
+    @Test
+    public void testSortDropdownSelectOption() {
+        searchPage.selectSortOption("Name Ascending");
+        assertEquals("Name Ascending", searchPage.getSelectedSortOption());
+    }
+
+    @Test
+    public void testSortDropdownHasMultipleOptions() {
+        assertTrue(searchPage.getSortOptionLabels().size() >= 2,
+                "Sort dropdown should list at least two options");
     }
 }
