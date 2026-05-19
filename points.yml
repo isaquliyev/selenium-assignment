@@ -20,8 +20,9 @@ student:
 # ----------------------------------------------------------
 ai_usage:
   used: false
-  tools: ""           # e.g. "Claude, GitHub Copilot"
-  description: ""     # e.g. "Used Claude to generate initial Page Object 
+  tools: "Claude (Adaptive Thinking)"           # e.g. "Claude, GitHub Copilot"
+  description: "I used it for deciding architecture, how to organize files, which test case in which feature."
+  # e.g. "Used Claude to generate initial Page Object 
                        #  classes, then modified them manually. Used Copilot 
                        #  for autocomplete while writing test methods."
                        
@@ -89,7 +90,7 @@ basic:
     description: "Fill or read the content of a textarea element"
 
   dropdown:                  # 2 pts | once
-    done: false
+    done: true
     description: "Select an option from a drop-down (using Select class or similar)"
     link: "https://www.selenium.dev/documentation/webdriver/support_features/select_lists/"
 
