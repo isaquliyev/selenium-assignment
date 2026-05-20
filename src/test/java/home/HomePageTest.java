@@ -1,5 +1,6 @@
 package home;
 
+import base.Config;
 import base.Device;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.WebDriver;
@@ -17,20 +18,20 @@ public class HomePageTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), new ChromeOptions());
+        driver = new RemoteWebDriver(new URL(Config.seleniumHubUrl()), new ChromeOptions());
         homePage = new HomePage(driver);
     }
 
     @Test
     public void testOpenHomePage() {
-        homePage.open();
+        homePage.open(Config.baseUrl());
         System.out.println("Page title: " + driver.getTitle());
     }
 
     @Test
     public void testDesktopNav() {
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
 
         assertFalse(homePage.isBurgerButtonVisible(), "Burger should be hidden on desktop");
         assertTrue(homePage.isDesktopNavVisible(), "Desktop nav should be visible");
@@ -40,7 +41,7 @@ public class HomePageTest {
     @Test
     public void testMobileNav() {
         homePage.setDevice(Device.MOBILE);
-        homePage.open();
+        homePage.open(Config.baseUrl());
 
         assertTrue(homePage.isBurgerButtonVisible(), "Burger should be visible on mobile");
         assertFalse(homePage.isDesktopNavVisible(), "Desktop nav should be hidden on mobile");
@@ -52,11 +53,11 @@ public class HomePageTest {
     @Test
     public void testNavLinkCountConsistentAcrossDevices() {
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         int desktopCount = homePage.getDesktopNavLinkCount();
 
         homePage.setDevice(Device.MOBILE);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.openMobileMenu();
         int mobileCount = homePage.getMobileNavLinkCount();
 

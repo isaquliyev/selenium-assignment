@@ -1,11 +1,13 @@
 package navigation;
 
+import base.Config;
 import base.Device;
 import base.Language;
 import base.NavItem;
 import home.HomePage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -25,12 +27,12 @@ public class NavigationTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), new ChromeOptions());
+        driver = new RemoteWebDriver(new URL(Config.seleniumHubUrl()), new ChromeOptions());
         homePage = new HomePage(driver);
         navBar = new NavigationBar(driver);
 
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
     }
 
@@ -44,7 +46,7 @@ public class NavigationTest {
     @EnumSource(NavItem.class)
     public void testDesktopNavTitle(NavItem item) {
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
 
         navBar.clickDesktopNavItem(item);
@@ -58,7 +60,7 @@ public class NavigationTest {
     @EnumSource(NavItem.class)
     public void testMobileNavTitle(NavItem item) {
         homePage.setDevice(Device.MOBILE);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
 
         navBar.clickMobileNavItem(item);
@@ -71,7 +73,7 @@ public class NavigationTest {
     @Test
     public void testMobileNavItemCount() {
         homePage.setDevice(Device.MOBILE);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
         navBar.openBurgerMenu();
 
@@ -84,7 +86,7 @@ public class NavigationTest {
         int desktopCount = navBar.getDesktopNavItems().size();
 
         homePage.setDevice(Device.MOBILE);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
         navBar.openBurgerMenu();
 

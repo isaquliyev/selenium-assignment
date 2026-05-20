@@ -1,10 +1,12 @@
 package pages;
 
 import base.BasePageTest;
+import base.Config;
 import base.Device;
 import base.Language;
 import base.NavItem;
 import home.HomePage;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebElement;
 
@@ -18,7 +20,7 @@ public class NewsPageTest extends BasePageTest {
     protected void navigateToPage() {
         HomePage homePage = new HomePage(driver);
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
         navBar.clickDesktopNavItem(NavItem.NEWS);
         newsPage = new NewsPage(driver);

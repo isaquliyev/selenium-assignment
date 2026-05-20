@@ -11,7 +11,7 @@ import java.util.Map;
 
 public final class WebDriverFactory {
 
-    private static final String SELENIUM_HUB_URL = "http://selenium:4444/wd/hub";
+    private static final String SELENIUM_HUB_URL = Config.seleniumHubUrl();
 
     private WebDriverFactory() {
     }

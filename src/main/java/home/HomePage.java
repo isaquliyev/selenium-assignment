@@ -17,8 +17,8 @@ public class HomePage extends BasePage {
         super(driver);
     }
 
-    public void open() {
-        driver.get("https://opendata.az/");
+    public void open(String url) {
+        driver.get(url);
     }
 
     public boolean isBurgerButtonVisible() {

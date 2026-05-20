@@ -1,9 +1,11 @@
 package home;
 
+import base.Config;
 import base.Device;
 import base.Language;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -19,10 +21,10 @@ public class LanguageTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        driver = new RemoteWebDriver(new URL("http://selenium:4444/wd/hub"), new ChromeOptions());
+        driver = new RemoteWebDriver(new URL(Config.seleniumHubUrl()), new ChromeOptions());
         homePage = new HomePage(driver);
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
     }
 
     @Test

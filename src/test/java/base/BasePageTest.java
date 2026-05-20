@@ -4,6 +4,7 @@ import download.DownloadDirectory;
 import navigation.NavigationBar;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.openqa.selenium.WebDriver;
 
 import java.nio.file.Path;
@@ -13,6 +14,9 @@ public abstract class BasePageTest {
     protected WebDriver driver;
     protected NavigationBar navBar;
     private static Path downloadDirectory;
+
+    @RegisterExtension
+    final ScreenshotOnFailure screenshotOnFailure = new ScreenshotOnFailure(() -> driver);
 
     @BeforeEach
     public void setUp() throws Exception {

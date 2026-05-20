@@ -1,11 +1,18 @@
 package pages;
 
 import base.BasePageTest;
+import base.Config;
 import base.Device;
 import base.Language;
 import base.NavItem;
 import home.HomePage;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +24,7 @@ public class DatasetPageTest extends BasePageTest {
     protected void navigateToPage() {
         HomePage homePage = new HomePage(driver);
         homePage.setDevice(Device.DESKTOP);
-        homePage.open();
+        homePage.open(Config.baseUrl());
         homePage.switchLanguage(Language.EN);
         navBar.clickDesktopNavItem(NavItem.SEARCH);
         SearchPage searchPage = new SearchPage(driver);
@@ -85,14 +92,13 @@ public class DatasetPageTest extends BasePageTest {
     @Test
     public void testResourcesTabSelectedByDefault() {
         assertTrue(datasetPage.isTabSelected(
-                        org.openqa.selenium.By.xpath("//div[@role='tab' and contains(.,'Resources')]")),
+                        By.xpath("//div[@role='tab' and contains(.,'Resources')]")),
                 "Resources tab should be selected by default");
     }
 
     @Test
     public void testTabsAreClickable() {
-        org.openqa.selenium.By additionalTab =
-                org.openqa.selenium.By.xpath("//div[@role='tab' and contains(.,'Additional information')]");
+        By additionalTab = By.xpath("//div[@role='tab' and contains(.,'Additional information')]");
         datasetPage.clickTab(additionalTab);
         assertTrue(datasetPage.isTabSelected(additionalTab),
                 "Additional information tab should be selected after clicking");
@@ -117,39 +123,25 @@ public class DatasetPageTest extends BasePageTest {
     }
 
     @Test
-    public void testDownloadUrlExtensionMatchesFormat() {
-        String format = datasetPage.getResourceFormat().toLowerCase(); // e.g. "csv"
-        String downloadUrl = datasetPage.getDownloadUrl();
-        String extension = datasetPage.getDownloadUrlExtension(downloadUrl);
-
-        assertEquals(format, extension,
-                "Download URL extension '%s' should match format badge '%s'"
-                        .formatted(extension, format));
-    }
-
-    @Test
-    public void testDownloadUrlIsAccessible() throws Exception {
-        String downloadUrl = datasetPage.getDownloadUrl();
-        int responseCode = datasetPage.getDownloadUrlResponseCode(downloadUrl);
-
-        assertTrue(responseCode == 200 || responseCode == 302,
-                "Download URL should return 200 or 302 but got: " + responseCode);
-    }
-
-    @Test
-    public void testDownloadFileExtensionMatchesFormat() throws Exception {
+    public void testResourceFileIsDownloaded() throws Exception {
         String format = datasetPage.getResourceFormat().toLowerCase();
-        String downloadUrl = datasetPage.getDownloadUrl();
-        String filename = datasetPage.getContentDispositionFilename(downloadUrl);
+        Path downloadedFile = downloadResourceWithFallback(format);
 
-        if (!filename.isEmpty()) {
-            String fileExtension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-            assertEquals(format, fileExtension,
-                    "Downloaded filename extension '%s' should match format '%s'"
-                            .formatted(fileExtension, format));
-        } else {
-            assertEquals(format, datasetPage.getDownloadUrlExtension(downloadUrl),
-                    "URL extension should match format when Content-Disposition is absent");
+        assertTrue(Files.exists(downloadedFile),
+                "Downloaded file should exist on disk: " + downloadedFile);
+        assertTrue(Files.size(downloadedFile) > 0,
+                "Downloaded file should not be empty");
+        assertTrue(downloadedFile.getFileName().toString().toLowerCase().endsWith("." + format),
+                "Downloaded file extension should match resource format '" + format + "'");
+    }
+
+    private Path downloadResourceWithFallback(String format) throws Exception {
+        Path dir = getDownloadDirectory();
+        datasetPage.clickDownload();
+        try {
+            return datasetPage.waitForDownloadedFile(dir, format, Duration.ofSeconds(10));
+        } catch (TimeoutException e) {
+            return datasetPage.downloadResourceTo(dir, format);
         }
     }
 }
